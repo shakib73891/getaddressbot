@@ -1,4 +1,4 @@
-import random
+import os
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
@@ -10,11 +10,25 @@ addresses = [
     "nafiz_005"
 ]
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    address = random.choice(addresses)
-    await update.message.reply_text(address)
+used_users = set()
 
-app = ApplicationBuilder().token("8098593416:AAGeexlY8B_RvMYB0DR4Tv2cv8YmBNo25U8").build()
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.message.from_user.id
+
+    if user_id in used_users:
+        await update.message.reply_text("আপনি ইতিমধ্যে একটি address পেয়ে গেছেন ❗")
+        return
+
+    if len(addresses) == 0:
+        await update.message.reply_text("দুঃখিত, আর কোনো address নেই ❌")
+        return
+
+    address = addresses.pop(0)   # একটার পর একটা দিবে
+    used_users.add(user_id)
+
+    await update.message.reply_text(f"আপনার address: {address}")
+
+app = ApplicationBuilder().token(os.getenv("BOT_TOKEN")).build()
 app.add_handler(CommandHandler("start", start))
 
 app.run_polling()
